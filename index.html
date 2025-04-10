@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <!-- Theme Toggle and Clock -->
+    <div class="utility-bar">
+        <div class="clock-display">
+            <i class="fas fa-clock"></i>
+            <span id="current-time">Loading...</span>
+        </div>
+        <button id="theme-toggle" class="theme-toggle">
+            <i class="fas fa-moon"></i>
+        </button>
+    </div>
+
+    <nav class="navigation">
+        <ul>
+            <li><a href="index.html" class="active">Home</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="services.html">Services</a></li>
+            <li><a href="pricing.html">Pricing</a></li>
+            <li><a href="contact.html">Contact</a></li>
+        </ul>
+    </nav>
+
+    <!-- Notification Container -->
+    <div id="notification" class="notification">
+        <span id="notification-message"></span>
+        <button onclick="closeNotification()" class="notification-close">&times;</button>
+    </div>
+
+    <div class="dashboard-container">
+        <!-- Quick Actions Menu -->
+        <div class="quick-actions">
+            <button class="quick-action-btn" onclick="openModal('newCustomerModal')">
+                <i class="fas fa-plus"></i> New Customer
+            </button>
+            <button class="quick-action-btn" onclick="openModal('invoiceModal')">
+                <i class="fas fa-file-invoice"></i> Generate Invoice
+            </button>
+            <button class="quick-action-btn" onclick="openModal('analyticsModal')">
+                <i class="fas fa-chart-line"></i> View Analytics
+            </button>
+            <button class="quick-action-btn" onclick="openModal('settingsModal')">
+                <i class="fas fa-cog"></i> Settings
+            </button>
+        </div>
+
+        <!-- Tiles Section -->
+        <div class="tile-container">
+            <div class="tile">
+                <h2>Weekly Services</h2>
+                <p>100 Customers</p>
+            </div>
+            <div class="tile">
+                <h2>Total Revenue</h2>
+                <p>GHS 100,000</p>
+            </div>
+            <div class="tile">
+                <h2>Incident</h2>
+                <p>25 Customers</p>
+            </div>
+            <div class="tile">
+                <h2>Reports</h2>
+                <p>30</p>
+            </div>
+        </div>
+
+        <!-- Chart Section -->
+        <div class="chart-container">
+            <canvas id="revenueChart"></canvas>
+        </div>
+
+        <!-- Table Section -->
+        <div class="table-wrapper">
+            <div class="table-controls">
+                <input type="text" id="searchInput" placeholder="Search customers..." onkeyup="searchTable()">
+                <select id="statusFilter" onchange="filterTable()">
+                    <option value="all">All Statuses</option>
+                    <option value="Paid">Paid</option>
+                    <option value="Pending">Pending</option>
+                </select>
+                <input type="date" id="dateFilter" onchange="filterTable()">
+                <div class="table-actions">
+                    <button onclick="printTable()" class="action-btn"><i class="fas fa-print"></i> Print</button>
+                    <button onclick="exportToCSV()" class="action-btn"><i class="fas fa-download"></i> Export CSV</button>
+                </div>
+            </div>
+            <div class="table-info">
+                <span id="rowCount">Showing 6 entries</span>
+            </div>
+            <table id="customerTable">
+                <thead>
+                    <tr>
+                        <th onclick="sortTable(0)">Name <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(1)">Address <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(2)">Payment <i class="fas fa-sort"></i></th>
+                        <th onclick="sortTable(3)">Status <i class="fas fa-sort"></i></th>
+                        <th>Date</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>John Doe</td>
+                        <td>1234 Elm St, Springfield</td>
+                        <td>$100</td>
+                        <td><span class="status-badge paid">Paid</span></td>
+                        <td>2024-03-15</td>
+                    </tr>
+
+                    <tr>
+                        <td>Jane Smith</td>
+                        <td>5678 Oak St, Rivertown</td>
+                        <td>$150</td>
+                        <td><span class="status-badge pending">Pending</span></td>
+                        <td>2024-03-15</td>
+                    </tr>
+
+                    <tr>
+                        <td>Amy Williams</td>
+                        <td>1122 Maple St, Hilltop</td>
+                        <td>$120</td>
+                        <td><span class="status-badge pending">Pending</span></td>
+                        <td>2024-03-15</td>
+                    </tr>
+
+                    <tr>
+                        <td>Jane Smith</td>
+                        <td>5678 Oak St, Rivertown</td>
+                        <td>$150</td>
+                        <td><span class="status-badge pending">Pending</span></td>
+                        <td>2024-03-15</td>
+                    </tr>
+
+                    <tr>
+                        <td>Jane Smith</td>
+                        <td>5678 Oak St, Rivertown</td>
+                        <td>$150</td>
+                        <td><span class="status-badge pending">Pending</span></td>
+                        <td>2024-03-15</td>
+                    </tr>
+
+                    <tr>
+                        <td>Jane Smith</td>
+                        <td>5678 Oak St, Rivertown</td>
+                        <td>$150</td>
+                        <td><span class="status-badge pending">Pending</span></td>
+                        <td>2024-03-15</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <!-- Pagination -->
+            <div class="pagination">
+                <button id="prevPage" class="pagination-btn"><i class="fas fa-chevron-left"></i> Previous</button>
+                <div id="pageNumbers" class="page-numbers"></div>
+                <button id="nextPage" class="pagination-btn">Next <i class="fas fa-chevron-right"></i></button>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <div id="newCustomerModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Add New Customer</h2>
+                    <span class="close" onclick="closeModal('newCustomerModal')">&times;</span>
+                </div>
+                <form id="newCustomerForm" onsubmit="addNewCustomer(event)">
+                    <div class="form-group">
+                        <label for="customerName">Customer Name *</label>
+                        <input type="text" id="customerName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerAddress">Address *</label>
+                        <input type="text" id="customerAddress" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="customerPayment">Payment Amount *</label>
+                        <input type="number" id="customerPayment" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="customerStatus">Status *</label>
+                        <select id="customerStatus" required>
+                            <option value="Paid">Paid</option>
+                            <option value="Pending">Pending</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn">Add Customer</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="invoiceModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Generate Invoice</h2>
+                    <span class="close" onclick="closeModal('invoiceModal')">&times;</span>
+                </div>
+                <form id="invoiceForm" onsubmit="generateInvoice(event)">
+                    <div class="form-group">
+                        <label for="invoiceCustomer">Select Customer *</label>
+                        <select id="invoiceCustomer" required></select>
+                    </div>
+                    <div class="form-group">
+                        <label for="invoiceAmount">Amount *</label>
+                        <input type="number" id="invoiceAmount" required min="0">
+                    </div>
+                    <div class="form-group">
+                        <label for="invoiceDate">Due Date *</label>
+                        <input type="date" id="invoiceDate" required>
+                    </div>
+                    <button type="submit" class="submit-btn">Generate Invoice</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="analyticsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Analytics Dashboard</h2>
+                    <span class="close" onclick="closeModal('analyticsModal')">&times;</span>
+                </div>
+                <div class="analytics-container">
+                    <canvas id="analyticsChart"></canvas>
+                    <div class="analytics-summary">
+                        <div class="summary-item">
+                            <h3>Total Revenue</h3>
+                            <p id="totalRevenue">GHS 100,000</p>
+                        </div>
+                        <div class="summary-item">
+                            <h3>Average Payment</h3>
+                            <p id="avgPayment">GHS 2,500</p>
+                        </div>
+                        <div class="summary-item">
+                            <h3>Pending Payments</h3>
+                            <p id="pendingAmount">GHS 15,000</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="settingsModal" class="modal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Settings</h2>
+                    <span class="close" onclick="closeModal('settingsModal')">&times;</span>
+                </div>
+                <form id="settingsForm" onsubmit="saveSettings(event)">
+                    <div class="form-group">
+                        <label data-translate="theme">Theme</label>
+                        <div class="theme-options">
+                            <label class="radio-label">
+                                <input type="radio" name="theme" value="light"> Light
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="theme" value="dark"> Dark
+                            </label>
+                            <label class="radio-label">
+                                <input type="radio" name="theme" value="system"> System
+                            </label>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="rowsPerPage" data-translate="rowsPerPage">Rows Per Page</label>
+                        <select id="rowsPerPage">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="20">20</option>
+                            <option value="50">50</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>
+                            <input type="checkbox" id="enableNotifications">
+                            <span data-translate="notifications">Enable Notifications</span>
+                        </label>
+                    </div>
+                    <div class="form-group">
+                        <label for="currencySelect" data-translate="currency">Currency</label>
+                        <select id="currencySelect">
+                            <option value="GHS">Ghana Cedi (GHS)</option>
+                            <option value="USD">US Dollar (USD)</option>
+                            <option value="EUR">Euro (EUR)</option>
+                            <option value="GBP">British Pound (GBP)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="dateFormatSelect" data-translate="dateFormat">Date Format</label>
+                        <select id="dateFormatSelect">
+                            <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                            <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                            <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="languageSelect" data-translate="language">Language</label>
+                        <select id="languageSelect">
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="submit-btn" data-translate="save">Save Settings</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Theme Management
+        function setTheme(theme) {
+            const root = document.documentElement;
+            const themeToggleIcon = document.querySelector('#theme-toggle i');
+            
+            if (theme === 'system') {
+                const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+                root.setAttribute('data-theme', systemTheme);
+                themeToggleIcon.className = systemTheme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            } else {
+                root.setAttribute('data-theme', theme);
+                themeToggleIcon.className = theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+            }
+
+            // Save theme to localStorage
+            const savedSettings = localStorage.getItem('dashboardSettings');
+            const settings = savedSettings ? JSON.parse(savedSettings) : defaultSettings;
+            settings.theme = theme;
+            localStorage.setItem('dashboardSettings', JSON.stringify(settings));
+        }
+
+        // Theme Toggle Event Listener
+        document.getElementById('theme-toggle').addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            setTheme(newTheme);
+            
+            // Update radio button in settings
+            const themeRadio = document.querySelector(`input[name="theme"][value="${newTheme}"]`);
+            if (themeRadio) {
+                themeRadio.checked = true;
+            }
+        });
+
+        // System theme detection
+        const systemThemeQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        systemThemeQuery.addListener((e) => {
+            const savedSettings = localStorage.getItem('dashboardSettings');
+            if (savedSettings) {
+                const settings = JSON.parse(savedSettings);
+                if (settings.theme === 'system') {
+                    setTheme('system');
+                }
+            }
+        });
+
+        // Real-time Clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            const dateString = now.toLocaleDateString();
+            document.getElementById('current-time').textContent = `${dateString} ${timeString}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // Revenue Chart
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Monthly Revenue',
+                    data: [65000, 75000, 85000, 82000, 90000, 100000],
+                    borderColor: '#4CAF50',
+                    tension: 0.1
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Revenue Trend'
+                    }
+                }
+            }
+        });
+
+        // Pagination
+        const rowsPerPage = 5;
+        let currentPage = 1;
+        const table = document.getElementById('customerTable');
+        const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+        function showPage(page) {
+            const start = (page - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+
+            for (let i = 0; i < rows.length; i++) {
+                rows[i].style.display = (i >= start && i < end) ? '' : 'none';
+            }
+
+            updatePagination();
+            updateRowCount();
+        }
+
+        function updatePagination() {
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+            const pageNumbers = document.getElementById('pageNumbers');
+            pageNumbers.innerHTML = '';
+
+            for (let i = 1; i <= totalPages; i++) {
+                const btn = document.createElement('button');
+                btn.className = `page-number ${i === currentPage ? 'active' : ''}`;
+                btn.textContent = i;
+                btn.onclick = () => {
+                    currentPage = i;
+                    showPage(i);
+                };
+                pageNumbers.appendChild(btn);
+            }
+
+            document.getElementById('prevPage').disabled = currentPage === 1;
+            document.getElementById('nextPage').disabled = currentPage === totalPages;
+        }
+
+        document.getElementById('prevPage').onclick = () => {
+            if (currentPage > 1) {
+                currentPage--;
+                showPage(currentPage);
+            }
+        };
+
+        document.getElementById('nextPage').onclick = () => {
+            const totalPages = Math.ceil(rows.length / rowsPerPage);
+            if (currentPage < totalPages) {
+                currentPage++;
+                showPage(currentPage);
+            }
+        };
+
+        // Initialize pagination
+        showPage(1);
+
+        // Sort table function
+        function sortTable(n) {
+            var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+            table = document.getElementById("customerTable");
+            switching = true;
+            dir = "asc";
+            
+            while (switching) {
+                switching = false;
+                rows = table.rows;
+                
+                for (i = 1; i < (rows.length - 1); i++) {
+                    shouldSwitch = false;
+                    x = rows[i].getElementsByTagName("TD")[n];
+                    y = rows[i + 1].getElementsByTagName("TD")[n];
+                    
+                    if (dir == "asc") {
+                        if (x.innerHTML.toLowerCase() > y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    } else if (dir == "desc") {
+                        if (x.innerHTML.toLowerCase() < y.innerHTML.toLowerCase()) {
+                            shouldSwitch = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (shouldSwitch) {
+                    rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                    switching = true;
+                    switchcount++;
+                } else {
+                    if (switchcount == 0 && dir == "asc") {
+                        dir = "desc";
+                        switching = true;
+                    }
+                }
+            }
+        }
+
+        // Search table function
+        function searchTable() {
+            var input, filter, table, tr, td, i, txtValue;
+            input = document.getElementById("searchInput");
+            filter = input.value.toLowerCase();
+            table = document.getElementById("customerTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td");
+                var found = false;
+                for (var j = 0; j < td.length; j++) {
+                    if (td[j]) {
+                        txtValue = td[j].textContent || td[j].innerText;
+                        if (txtValue.toLowerCase().indexOf(filter) > -1) {
+                            found = true;
+                            break;
+                        }
+                    }
+                }
+                tr[i].style.display = found ? "" : "none";
+            }
+        }
+
+        // Filter table by status
+        function filterTable() {
+            var select, filter, table, tr, td, i;
+            select = document.getElementById("statusFilter");
+            filter = select.value;
+            table = document.getElementById("customerTable");
+            tr = table.getElementsByTagName("tr");
+
+            for (i = 1; i < tr.length; i++) {
+                td = tr[i].getElementsByTagName("td")[3]; // Status column
+                if (td) {
+                    var statusText = td.querySelector('.status-badge').textContent;
+                    if (filter === "all" || statusText === filter) {
+                        tr[i].style.display = "";
+                    } else {
+                        tr[i].style.display = "none";
+                    }
+                }
+            }
+        }
+
+        // Print table function
+        function printTable() {
+            window.print();
+        }
+
+        // Export to CSV function
+        function exportToCSV() {
+            const table = document.getElementById("customerTable");
+            let csv = [];
+            const rows = table.querySelectorAll("tr");
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = [], cols = rows[i].querySelectorAll("td, th");
+                
+                for (let j = 0; j < cols.length; j++) {
+                    let text = cols[j].innerText.replace(/,/g, '');
+                    row.push(text);
+                }
+                
+                csv.push(row.join(","));
+            }
+
+            const csvFile = new Blob([csv.join("\n")], { type: "text/csv" });
+            const downloadLink = document.createElement("a");
+            downloadLink.download = "customer_data.csv";
+            downloadLink.href = window.URL.createObjectURL(csvFile);
+            downloadLink.style.display = "none";
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+        }
+
+        // Update row count
+        function updateRowCount() {
+            const table = document.getElementById("customerTable");
+            const visibleRows = Array.from(table.querySelectorAll("tbody tr"))
+                .filter(row => row.style.display !== "none").length;
+            document.getElementById("rowCount").textContent = `Showing ${visibleRows} entries`;
+        }
+
+        // Add event listeners
+        document.addEventListener("DOMContentLoaded", function() {
+            updateRowCount();
+            const filters = ["searchInput", "statusFilter", "dateFilter"];
+            filters.forEach(id => {
+                document.getElementById(id).addEventListener("change", function() {
+                    filterTable();
+                    updateRowCount();
+                });
+            });
+        });
+
+        // Modal Functions
+        function openModal(modalId) {
+            document.getElementById(modalId).style.display = 'block';
+            if (modalId === 'analyticsModal') {
+                initializeAnalytics();
+            }
+        }
+
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            const messageElement = document.getElementById('notification-message');
+            messageElement.textContent = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'flex';
+            setTimeout(() => {
+                closeNotification();
+            }, 5000);
+        }
+
+        function closeNotification() {
+            document.getElementById('notification').style.display = 'none';
+        }
+
+        // Add New Customer
+        function addNewCustomer(event) {
+            event.preventDefault();
+            const name = document.getElementById('customerName').value;
+            const address = document.getElementById('customerAddress').value;
+            const payment = document.getElementById('customerPayment').value;
+            const status = document.getElementById('customerStatus').value;
+            const date = new Date().toISOString().split('T')[0];
+
+            const tbody = document.querySelector('#customerTable tbody');
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td>${name}</td>
+                <td>${address}</td>
+                <td>$${payment}</td>
+                <td><span class="status-badge ${status.toLowerCase()}">${status}</span></td>
+                <td>${date}</td>
+            `;
+            tbody.appendChild(tr);
+
+            closeModal('newCustomerModal');
+            showNotification('Customer added successfully!');
+            event.target.reset();
+            updateRowCount();
+        }
+
+        // Generate Invoice
+        function generateInvoice(event) {
+            event.preventDefault();
+            const customer = document.getElementById('invoiceCustomer').value;
+            const amount = document.getElementById('invoiceAmount').value;
+            const date = document.getElementById('invoiceDate').value;
+
+            // Simulate invoice generation
+            setTimeout(() => {
+                showNotification(`Invoice generated for ${customer}`);
+                closeModal('invoiceModal');
+                event.target.reset();
+            }, 1000);
+        }
+
+        // Initialize Analytics
+        function initializeAnalytics() {
+            const ctx = document.getElementById('analyticsChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                    datasets: [{
+                        label: 'Monthly Revenue',
+                        data: [65000, 75000, 85000, 82000, 90000, 100000],
+                        backgroundColor: '#4CAF50'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Monthly Revenue Analysis'
+                        }
+                    }
+                }
+            });
+        }
+
+        // Settings Management
+        const defaultSettings = {
+            theme: 'light',
+            rowsPerPage: 5,
+            enableNotifications: true,
+            currency: 'GHS',
+            dateFormat: 'MM/DD/YYYY',
+            language: 'en'
+        };
+
+        // Load settings from localStorage
+        function loadSettings() {
+            const savedSettings = localStorage.getItem('dashboardSettings');
+            const settings = savedSettings ? JSON.parse(savedSettings) : defaultSettings;
+            
+            // Apply theme
+            setTheme(settings.theme);
+            
+            // Set radio button
+            const themeRadio = document.querySelector(`input[name="theme"][value="${settings.theme}"]`);
+            if (themeRadio) {
+                themeRadio.checked = true;
+            }
+            
+            // Apply rows per page
+            document.getElementById('rowsPerPage').value = settings.rowsPerPage;
+            window.rowsPerPage = settings.rowsPerPage;
+            
+            // Apply notifications
+            document.getElementById('enableNotifications').checked = settings.enableNotifications;
+            
+            // Apply other settings
+            document.getElementById('currencySelect').value = settings.currency;
+            document.getElementById('dateFormatSelect').value = settings.dateFormat;
+            document.getElementById('languageSelect').value = settings.language;
+
+            // Update UI based on settings
+            updateUIWithSettings(settings);
+            return settings;
+        }
+
+        // Save settings to localStorage
+        function saveSettings(event) {
+            event.preventDefault();
+            const settings = {
+                theme: document.querySelector('input[name="theme"]:checked').value,
+                rowsPerPage: parseInt(document.getElementById('rowsPerPage').value),
+                enableNotifications: document.getElementById('enableNotifications').checked,
+                currency: document.getElementById('currencySelect').value,
+                dateFormat: document.getElementById('dateFormatSelect').value,
+                language: document.getElementById('languageSelect').value
+            };
+
+            localStorage.setItem('dashboardSettings', JSON.stringify(settings));
+            setTheme(settings.theme); // Apply theme immediately
+            updateUIWithSettings(settings);
+            showNotification('Settings saved successfully!');
+            closeModal('settingsModal');
+        }
+
+        // Update UI based on settings
+        function updateUIWithSettings(settings) {
+            // Update theme
+            const themeIcon = document.querySelector('#theme-toggle i');
+            themeIcon.className = settings.theme === 'dark' ? 'fas fa-sun' : 'fas fa-moon';
+
+            // Update rows per page
+            window.rowsPerPage = settings.rowsPerPage;
+            showPage(1);
+
+            // Update currency display
+            const amounts = document.querySelectorAll('.tile p, td:nth-child(3)');
+            amounts.forEach(amount => {
+                const value = amount.textContent.replace(/[^0-9.]/g, '');
+                amount.textContent = formatCurrency(value, settings.currency);
+            });
+
+            // Update date format
+            const dates = document.querySelectorAll('td:last-child');
+            dates.forEach(date => {
+                const originalDate = new Date(date.textContent);
+                date.textContent = formatDate(originalDate, settings.dateFormat);
+            });
+
+            // Apply language if different from current
+            if (settings.language !== currentLanguage) {
+                loadLanguage(settings.language);
+            }
+        }
+
+        // Currency formatter
+        function formatCurrency(amount, currency) {
+            const formatter = new Intl.NumberFormat(undefined, {
+                style: 'currency',
+                currency: currency
+            });
+            return formatter.format(amount);
+        }
+
+        // Date formatter
+        function formatDate(date, format) {
+            const options = {
+                'MM/DD/YYYY': { month: '2-digit', day: '2-digit', year: 'numeric' },
+                'DD/MM/YYYY': { day: '2-digit', month: '2-digit', year: 'numeric' },
+                'YYYY-MM-DD': { year: 'numeric', month: '2-digit', day: '2-digit' }
+            };
+            return date.toLocaleDateString(undefined, options[format]);
+        }
+
+        // Language support
+        let currentLanguage = 'en';
+        const translations = {
+            en: {
+                settings: 'Settings',
+                theme: 'Theme',
+                rowsPerPage: 'Rows Per Page',
+                notifications: 'Enable Notifications',
+                currency: 'Currency',
+                dateFormat: 'Date Format',
+                language: 'Language',
+                save: 'Save Settings'
+            },
+            es: {
+                settings: 'Configuración',
+                theme: 'Tema',
+                rowsPerPage: 'Filas por página',
+                notifications: 'Activar notificaciones',
+                currency: 'Moneda',
+                dateFormat: 'Formato de fecha',
+                language: 'Idioma',
+                save: 'Guardar cambios'
+            }
+            // Add more languages as needed
+        };
+
+        function loadLanguage(lang) {
+            currentLanguage = lang;
+            const texts = translations[lang];
+            Object.keys(texts).forEach(key => {
+                const elements = document.querySelectorAll(`[data-translate="${key}"]`);
+                elements.forEach(element => {
+                    element.textContent = texts[key];
+                });
+            });
+        }
+
+        // Initialize settings on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            // Update settings modal with additional options
+            const settingsForm = document.getElementById('settingsForm');
+            settingsForm.innerHTML = `
+                <div class="form-group">
+                    <label data-translate="theme">Theme</label>
+                    <div class="theme-options">
+                        <label class="radio-label">
+                            <input type="radio" name="theme" value="light"> Light
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="theme" value="dark"> Dark
+                        </label>
+                        <label class="radio-label">
+                            <input type="radio" name="theme" value="system"> System
+                        </label>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="rowsPerPage" data-translate="rowsPerPage">Rows Per Page</label>
+                    <select id="rowsPerPage">
+                        <option value="5">5</option>
+                        <option value="10">10</option>
+                        <option value="20">20</option>
+                        <option value="50">50</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="enableNotifications">
+                        <span data-translate="notifications">Enable Notifications</span>
+                    </label>
+                </div>
+                <div class="form-group">
+                    <label for="currencySelect" data-translate="currency">Currency</label>
+                    <select id="currencySelect">
+                        <option value="GHS">Ghana Cedi (GHS)</option>
+                        <option value="USD">US Dollar (USD)</option>
+                        <option value="EUR">Euro (EUR)</option>
+                        <option value="GBP">British Pound (GBP)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="dateFormatSelect" data-translate="dateFormat">Date Format</label>
+                    <select id="dateFormatSelect">
+                        <option value="MM/DD/YYYY">MM/DD/YYYY</option>
+                        <option value="DD/MM/YYYY">DD/MM/YYYY</option>
+                        <option value="YYYY-MM-DD">YYYY-MM-DD</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="languageSelect" data-translate="language">Language</label>
+                    <select id="languageSelect">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                    </select>
+                </div>
+                <button type="submit" class="submit-btn" data-translate="save">Save Settings</button>
+            `;
+
+            // Load saved settings
+            loadSettings();
+
+            // Add event listeners
+            settingsForm.addEventListener('submit', saveSettings);
+            
+            // System theme detection
+            if (window.matchMedia) {
+                const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+                mediaQuery.addListener((e) => {
+                    if (document.querySelector('input[name="theme"]:checked').value === 'system') {
+                        document.documentElement.setAttribute('data-theme', e.matches ? 'dark' : 'light');
+                    }
+                });
+            }
+        });
+    </script>
+</body>
+</html> 
